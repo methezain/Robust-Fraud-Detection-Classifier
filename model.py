@@ -88,7 +88,7 @@ class FraudDetectionModel:
         
         return df
     
-    def preprocess_data(self, df):
+    def preprocess_data(self, df, is_training=True):
         """Clean and prepare data for modeling."""
         df = df.copy()
         
@@ -99,6 +99,16 @@ class FraudDetectionModel:
         
         # One-hot encode transaction type
         df = pd.get_dummies(df, columns=['type'], prefix='type', drop_first=False)
+        
+        # For prediction, ensure all expected columns exist
+        if not is_training and self.feature_columns is not None:
+            # Add missing columns with 0s
+            for col in self.feature_columns:
+                if col not in df.columns:
+                    df[col] = 0
+            
+            # Reorder columns to match training data
+            df = df[self.feature_columns]
         
         print(f"Data preprocessed. Final shape: {df.shape}")
         return df
@@ -202,17 +212,46 @@ class FraudDetectionModel:
         }
     
     def save_model(self, filename='fraud_detection_model.joblib'):
-        """Save the trained model."""
+        """Save the trained model and metadata in a single file."""
         if self.model_pipeline is None:
             raise ValueError("No trained model to save")
         
-        joblib.dump(self.model_pipeline, filename)
-        print(f"Model saved as: {filename}")
+        # Create a dictionary containing both the pipeline and feature columns
+        model_data = {
+            'pipeline': self.model_pipeline,
+            'feature_columns': self.feature_columns,
+            'random_state': self.random_state
+        }
+        
+        joblib.dump(model_data, filename)
+        print(f"Model saved successfully as: {filename}")
+        print(f"  - Pipeline: {type(self.model_pipeline).__name__}")
+        print(f"  - Features: {len(self.feature_columns) if self.feature_columns else 0} columns")
         
     def load_model(self, filename='fraud_detection_model.joblib'):
-        """Load a pre-trained model."""
-        self.model_pipeline = joblib.load(filename)
-        print(f"Model loaded from: {filename}")
+        """Load a pre-trained model and metadata from a single file."""
+        try:
+            model_data = joblib.load(filename)
+            
+            # Check if it's the new format (dictionary) or old format (just pipeline)
+            if isinstance(model_data, dict):
+                # New format: extract components
+                self.model_pipeline = model_data['pipeline']
+                self.feature_columns = model_data.get('feature_columns', None)
+                self.random_state = model_data.get('random_state', self.random_state)
+                print(f"Model loaded successfully from: {filename}")
+                print(f"  - Pipeline: {type(self.model_pipeline).__name__}")
+                print(f"  - Features: {len(self.feature_columns) if self.feature_columns else 0} columns")
+            else:
+                # Old format: just the pipeline (backward compatibility)
+                self.model_pipeline = model_data
+                self.feature_columns = None
+                print(f"Model loaded from: {filename} (legacy format)")
+                print(f"Warning: Feature columns not found. Predictions may fail.")
+                
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            raise
         
         
     def predict_fraud(self, transaction_data):
@@ -255,4 +294,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main() 

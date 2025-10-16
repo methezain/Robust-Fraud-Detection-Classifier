@@ -6,6 +6,9 @@ Production-ready REST API for real-time fraud detection.
 import pandas as pd
 import numpy as np
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
 import uvicorn
@@ -19,6 +22,18 @@ app = FastAPI(
     description="Real-time fraud detection for financial transactions",
     version="1.0.0"
 )
+
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (you can restrict this in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Global model instance
 fraud_service = None
@@ -58,9 +73,19 @@ class FraudDetectionService:
 
         try:
             self.detector.load_model(model_path)
-            print(f"Model loaded successfully from {model_path}")
+            
+            # Validate that feature columns are loaded
+            if self.detector.feature_columns is None:
+                raise ValueError(
+                    "Feature columns not found in model file. "
+                    "Please retrain the model using the updated model.py"
+                )
+            
+            print(f"✓ Model loaded successfully from {model_path}")
+            print(f"✓ Ready to process transactions with {len(self.detector.feature_columns)} features")
+            
         except Exception as e:
-            print(f"Error loading model: {e}")
+            print(f"✗ Error loading model: {e}")
             raise
     
     def predict_single_transaction(self, transaction_dict):
@@ -76,7 +101,7 @@ class FraudDetectionService:
         try:
             df = pd.DataFrame([transaction_dict])
             
-            df_processed = self.detector.preprocess_data(df)
+            df_processed = self.detector.preprocess_data(df, is_training=False)
             
             prediction, probability = self.detector.predict_fraud(df_processed)
             
@@ -106,7 +131,7 @@ class FraudDetectionService:
             df = pd.DataFrame(transactions_list)
             
             # Preprocess transactions
-            df_processed = self.detector.preprocess_data(df)
+            df_processed = self.detector.preprocess_data(df, is_training=False)
             
             # Make predictions
             predictions, probabilities = self.detector.predict_fraud(df_processed)
@@ -167,7 +192,13 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information."""
+    """Serve the frontend application."""
+    return FileResponse('static/index.html')
+
+
+@app.get("/api")
+async def api_info():
+    """API information endpoint."""
     return {
         "message": "Fraud Detection API",
         "version": "1.0.0",
@@ -261,11 +292,15 @@ async def model_info():
     if fraud_service is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
+    detector = fraud_service.detector
+    
     return {
         "model_type": "RandomForestClassifier with SMOTE",
-        "features_expected": "Transaction amount, balances, type, and engineered features",
+        "features_count": len(detector.feature_columns) if detector.feature_columns else 0,
+        "features_list": detector.feature_columns if detector.feature_columns else [],
         "preprocessing": "StandardScaler for numerical, one-hot encoding for categorical",
         "sampling_strategy": "SMOTE with 0.1 ratio",
+        "random_state": detector.random_state,
         "status": "loaded and ready"
     }
 

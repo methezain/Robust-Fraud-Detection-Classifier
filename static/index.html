@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection System</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Fraud Detection System</h1>
+            <p class="subtitle">Transaction fraud analysis powered by Machine Learning</p>
+        </header>
+
+        <!-- Health Status -->
+        <div class="status-card" id="statusCard">
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking system status...</span>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('single')">Single Transaction</button>
+            <button class="tab-button" onclick="switchTab('batch')">Batch Analysis</button>
+            <button class="tab-button" onclick="switchTab('model')">Model Info</button>
+        </div>
+
+        <!-- Single Transaction Tab -->
+        <div id="singleTab" class="tab-content active">
+            <div class="card">
+                <h2>Analyze Single Transaction</h2>
+                <form id="transactionForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="step">Step</label>
+                            <input type="number" id="step" name="step" value="1" required>
+                            <small>Transaction time step</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="type">Transaction Type</label>
+                            <select id="type" name="type" required>
+                                <option value="TRANSFER">TRANSFER</option>
+                                <option value="CASH_OUT">CASH_OUT</option>
+                                <option value="CASH_IN">CASH_IN</option>
+                                <option value="PAYMENT">PAYMENT</option>
+                                <option value="DEBIT">DEBIT</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" name="amount" step="0.01" value="9000.60" required>
+                            <small>Transaction amount</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oldbalanceOrg">Origin Old Balance</label>
+                            <input type="number" id="oldbalanceOrg" name="oldbalanceOrg" step="0.01" value="9000.60" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newbalanceOrig">Origin New Balance</label>
+                            <input type="number" id="newbalanceOrig" name="newbalanceOrig" step="0.01" value="0.00" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oldbalanceDest">Destination Old Balance</label>
+                            <input type="number" id="oldbalanceDest" name="oldbalanceDest" step="0.01" value="0.00" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newbalanceDest">Destination New Balance</label>
+                            <input type="number" id="newbalanceDest" name="newbalanceDest" step="0.01" value="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-icon">🔍</span> Analyze Transaction
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="loadSampleData()">
+                            <span class="btn-icon">📝</span> Load Sample
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            <span class="btn-icon">🔄</span> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results -->
+            <div id="resultsCard" class="card results-card" style="display: none;">
+                <h2>Analysis Results</h2>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+
+        <!-- Batch Analysis Tab -->
+        <div id="batchTab" class="tab-content">
+            <div class="card">
+                <h2>Batch Transaction Analysis</h2>
+                <p>Upload a JSON file with multiple transactions for batch analysis.</p>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p>Drop JSON file here or click to upload</p>
+                    <input type="file" id="fileInput" accept=".json" style="display: none;">
+                    <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                        Choose File
+                    </button>
+                </div>
+
+                <div class="json-input-section">
+                    <label for="jsonInput">Or paste JSON directly:</label>
+                    <textarea id="jsonInput" placeholder='[
+  {
+    "step": 1,
+    "type": "TRANSFER",
+    "amount": 9000.60,
+    "oldbalanceOrg": 9000.60,
+    "newbalanceOrig": 0.00,
+    "oldbalanceDest": 0.00,
+    "newbalanceDest": 0.00
+  }
+]'></textarea>
+                    <button class="btn btn-primary" onclick="analyzeBatch()">
+                        <span class="btn-icon">⚡</span> Analyze Batch
+                    </button>
+                </div>
+            </div>
+
+            <div id="batchResults" class="card" style="display: none;">
+                <h2>Batch Results</h2>
+                <div id="batchSummary"></div>
+                <div id="batchDetails"></div>
+            </div>
+        </div>
+
+        <!-- Model Info Tab -->
+        <div id="modelTab" class="tab-content">
+            <div class="card">
+                <h2>Model Information</h2>
+                <div id="modelInfo" class="loading">Loading model information...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
