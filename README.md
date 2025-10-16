@@ -78,15 +78,6 @@ docker run -d -p 4000:4000 fraud-detection-api
 docker-compose up -d
 ```
 
-### Test API
-```bash
-# Single prediction
-python test_single_transaction.py
-
-# Batch predictions
-python test_batch_transactions.py
-```
-
 ---
 
 ## 📡 API Endpoints
