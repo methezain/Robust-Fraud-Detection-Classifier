@@ -1,169 +1,134 @@
-# Fraud Detection Model
+# 🛡️ Real-Time Fraud Detection System
 
-A production-ready fraud detection system using machine learning to identify suspicious financial transactions.
+Machine learning-powered API for detecting fraudulent financial transactions with instant predictions.
+
+---
+
+## 🎯 Problem Statement
+
+Financial fraud costs billions annually, with fraudulent transactions often going undetected until significant damage occurs. Traditional rule-based systems struggle with:
+- **High false-positive rates** leading to legitimate transaction blocks
+- **Inability to adapt** to evolving fraud patterns
+- **Manual review delays** causing poor customer experience
+- **Imbalanced datasets** where fraud cases are rare (~0.1%)
+
+---
+
+## � Solution
+
+A **machine learning microservice** that analyzes transactions in real-time and provides instant fraud predictions with:
+- **Probability scores** (0-100%) indicating fraud likelihood
+- **Risk classifications** (HIGH/MEDIUM/LOW/MINIMAL)
+- **REST API endpoints** for single and batch predictions
+- **Web interface** for easy testing and visualization
+
+---
+
+## ⚙️ Technical Overview
+
+### Architecture
+```
+PaySim Dataset → Feature Engineering → SMOTE Balancing → Random Forest → FastAPI → Prediction
+```
+
+### Key Components
+- **Model**: Random Forest classifier (100 estimators) with SMOTE oversampling
+- **Features**: Balance changes, transaction ratios, error flags, one-hot encoded types
+- **API**: FastAPI with CORS support, health monitoring, and batch processing
+- **Frontend**: Responsive web UI with real-time health checks and drag-drop uploads
+- **Deployment**: Docker containerized for scalability
+
+### Performance
+- **Response Time**: ~50-200ms per prediction
+- **Features**: 17 engineered features from 7 raw inputs
+- **Handles**: TRANSFER, CASH_OUT, PAYMENT, CASH_IN, DEBIT transactions
+
+---
+
+## 📈 Impact
+
+✅ **Instant Decision Making** - Block suspicious transactions before completion  
+✅ **Reduced False Positives** - ML learns patterns vs rigid rules  
+✅ **Scalable** - Handle thousands of requests via containerized deployment  
+✅ **Transparency** - Probability scores and confidence levels for review  
+✅ **Cost Effective** - Automated detection reduces manual review workload  
+
+---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
-
-```powershell
+### Run Locally
+```bash
+# Install dependencies
 pip install -r requirements.txt
+
+# Start API server
+python app.py
+
+# Access at http://localhost:4000
 ```
 
-### 2. Train the Model
+### Run with Docker
+```bash
+# Build and run
+docker build -t fraud-detection-api .
+docker run -d -p 4000:4000 fraud-detection-api
 
-```powershell
-python model.py
+# Or use docker-compose
+docker-compose up -d
 ```
 
-### 3. Test the Model
+### Test API
+```bash
+# Single prediction
+python test_single_transaction.py
 
-```powershell
-python test_model.py
+# Batch predictions
+python test_batch_transactions.py
 ```
 
-### 4. Use for Predictions
+---
 
-```powershell
-python deploy.py
+## 📡 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Web interface |
+| `/health` | GET | System status |
+| `/predict` | POST | Single transaction |
+| `/predict/batch` | POST | Batch transactions |
+| `/model/info` | GET | Model details |
+
+---
+
+## �️ Tech Stack
+
+**ML/Data**: scikit-learn • pandas • numpy • imbalanced-learn  
+**API**: FastAPI • uvicorn • pydantic  
+**Frontend**: HTML5 • CSS3 • JavaScript (Vanilla)  
+**Deployment**: Docker • Docker Compose  
+
+---
+
+## � Project Structure
+
+```
+├── app.py                          # FastAPI application
+├── model.py                        # ML model training
+├── fraud_detection_model.joblib    # Trained model
+├── static/                         # Web frontend
+│   ├── index.html
+│   ├── styles.css
+│   └── script.js
+├── test_single_transaction.py      # API test script
+├── test_batch_transactions.py      # Batch test script
+├── Dockerfile                      # Container config
+├── docker-compose.yml              # Orchestration
+└── requirements.txt                # Dependencies
 ```
 
-## 📋 What's Fixed
+---
 
-### Major Issues Resolved:
-- ✅ **Missing imports** - Added all required libraries
-- ✅ **Undefined variables** - Proper variable initialization and flow
-- ✅ **Inconsistent preprocessing** - Streamlined single preprocessing approach
-- ✅ **Poor function organization** - Class-based structure for better maintainability
-- ✅ **Mixed responsibilities** - Clear separation of concerns
+## 📄 License
 
-### Improvements Made:
-- 🔧 **Simplified architecture** - Easy to understand and maintain
-- 🔧 **Better error handling** - Comprehensive try-catch blocks
-- 🔧 **Production ready** - Deployment service included
-- 🔧 **Clear function names** - Self-explanatory method names
-- 🔧 **Better feature engineering** - More meaningful features
-- 🔧 **Robust data handling** - Handles edge cases properly
-
-## 📁 File Structure
-
-```
-fraud_detection/
-├── model.py          # Main model class with training pipeline
-├── test_model.py     # Testing script for development
-├── deploy.py         # Production deployment service
-├── requirements.txt  # Python dependencies
-└── README.md         # This file
-```
-
-## 🛠 Model Features
-
-### Data Processing:
-- Automatic data loading from Kaggle
-- Feature engineering (balance changes, error flags, ratios)
-- One-hot encoding for transaction types
-- Proper handling of missing values
-
-### Model Pipeline:
-- StandardScaler for numerical features
-- SMOTE for handling imbalanced data
-- RandomForest classifier with balanced classes
-- Complete scikit-learn pipeline
-
-### Evaluation Metrics:
-- Classification report
-- AUC-ROC score
-- Confusion matrix
-- Risk level categorization
-
-## 🎯 Usage Examples
-
-### Training a New Model:
-```python
-from model import FraudDetectionModel
-
-# Initialize and train
-detector = FraudDetectionModel(random_state=42)
-df = detector.load_data()
-df_processed = detector.preprocess_data(df)
-X_train, X_test, y_train, y_test = detector.split_data(df_processed)
-detector.train_model(X_train, y_train)
-detector.save_model('my_model.joblib')
-```
-
-### Making Predictions:
-```python
-from deploy import FraudDetectionService
-
-# Load trained model
-service = FraudDetectionService('fraud_detection_model.joblib')
-
-# Predict single transaction
-transaction = {
-    'step': 1,
-    'type': 'TRANSFER',
-    'amount': 5000.0,
-    'oldbalanceOrg': 5000.0,
-    'newbalanceOrig': 0.0,
-    'oldbalanceDest': 0.0,
-    'newbalanceDest': 0.0
-}
-
-result = service.predict_single_transaction(transaction)
-print(f"Fraud probability: {result['fraud_probability']:.2%}")
-```
-
-## 📊 Model Performance
-
-The model uses:
-- **RandomForestClassifier** with 100 estimators
-- **SMOTE** oversampling for class balance
-- **StandardScaler** for feature normalization
-- **Cross-validation** ready architecture
-
-Expected performance:
-- High precision for fraud detection
-- Balanced recall to catch most fraud cases
-- Fast inference time for real-time predictions
-
-## 🔧 Customization
-
-### Adjusting Model Parameters:
-```python
-# In model.py, modify the RandomForestClassifier
-RandomForestClassifier(
-    n_estimators=200,      # More trees
-    max_depth=15,          # Deeper trees
-    min_samples_split=5,   # More conservative splits
-    random_state=42
-)
-```
-
-### Adding New Features:
-```python
-# In engineer_features method, add:
-df['new_feature'] = df['amount'] / df['step']
-```
-
-## 🚨 Important Notes
-
-1. **Data Privacy**: Ensure compliance with data protection regulations
-2. **Model Monitoring**: Regularly retrain with new data
-3. **Threshold Tuning**: Adjust probability thresholds based on business needs
-4. **Feature Drift**: Monitor for changes in data distribution
-
-## 📞 Support
-
-For issues or questions:
-1. Check the error messages in console output
-2. Verify all dependencies are installed correctly
-3. Ensure the Kaggle dataset is accessible
-4. Review the logs for detailed error information
-
-## 📈 Next Steps
-
-1. **Hyperparameter Tuning**: Use GridSearchCV for optimal parameters
-2. **Feature Selection**: Implement feature importance analysis
-3. **Model Comparison**: Try different algorithms (XGBoost, LightGBM)
-4. **Real-time API**: Deploy as REST API using Flask/FastAPI
-5. **Monitoring Dashboard**: Create visualization for model performance
+MIT License - Feel free to use and modify.
