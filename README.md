@@ -111,8 +111,6 @@ docker-compose up -d
 │   ├── index.html
 │   ├── styles.css
 │   └── script.js
-├── test_single_transaction.py      # API test script
-├── test_batch_transactions.py      # Batch test script
 ├── Dockerfile                      # Container config
 ├── docker-compose.yml              # Orchestration
 └── requirements.txt                # Dependencies
